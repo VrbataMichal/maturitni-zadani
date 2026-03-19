@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NŌTS — Registrace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .auth-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+    }
+    .auth-box {
+      width: 100%;
+      max-width: 380px;
+      padding: 2.5rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .auth-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      text-align: center;
+    }
+    .auth-logo span { color: var(--accent); }
+    .auth-subtitle {
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: -1rem;
+    }
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .auth-field label {
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .auth-field input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      outline: none;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      padding: 0.7rem 0.9rem;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .auth-field input:focus { border-color: var(--accent); }
+    .btn-submit {
+      background: var(--accent);
+      color: #0d0d0d;
+      border: none;
+      padding: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+    }
+    .btn-submit:hover { background: #d4b87e; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-link {
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .auth-link a { color: var(--accent); text-decoration: none; }
+    .auth-link a:hover { text-decoration: underline; }
+    .auth-error {
+      background: rgba(232,93,74,0.1);
+      border: 1px solid var(--accent2);
+      color: var(--accent2);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.7rem;
+      display: none;
+    }
+    .auth-error.show { display: block; }
+    .auth-hint {
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-top: -1rem;
+    }
+    .auth-sep {
+      width: 40px;
+      height: 2px;
+      background: var(--accent);
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div>
+      <div class="auth-logo">NŌ<span>TS</span></div>
+      <div class="auth-subtitle">Nový účet</div>
+    </div>
+    <div class="auth-sep"></div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-field">
+      <label>Uživatelské jméno</label>
+      <input type="text" id="username" autocomplete="username" autofocus>
+    </div>
+    <div class="auth-field">
+      <label>Heslo</label>
+      <input type="password" id="password" autocomplete="new-password">
+      <span class="auth-hint">Minimálně 6 znaků.</span>
+    </div>
+    <div class="auth-field">
+      <label>Heslo znovu</label>
+      <input type="password" id="password2" autocomplete="new-password">
+    </div>
+    <button class="btn-submit" id="submitBtn" onclick="doRegister()">Vytvořit účet</button>
+    <div class="auth-link">Už máš účet? <a href="/login">Přihlás se</a></div>
+  </div>
+</div>
+<script>
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doRegister();
+  });
+
+  async function doRegister() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+    const btn = document.getElementById('submitBtn');
+    const err = document.getElementById('authError');
+
+    err.classList.remove('show');
+
+    if (!username || !password || !password2) {
+      err.textContent = 'Vyplň všechna pole.';
+      err.classList.add('show');
+      return;
+    }
+    if (password !== password2) {
+      err.textContent = 'Hesla se neshodují.';
+      err.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Registruji…';
+
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      window.location.href = '/';
+    } else {
+      err.textContent = data.error;
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Vytvořit účet';
+    }
+  }
+</script>
+</body>
+</html>
